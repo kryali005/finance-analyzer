@@ -692,31 +692,57 @@
             document.getElementById('dashboard').style.display = show ? 'none' : 'block';
         }
 
-        // Parse CSV data
+        // Optimized CSV parsing with async processing
         function parseCSV(csvText) {
-            const lines = csvText.trim().split('\n');
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            showLoading(true);
             
-            transactions = lines.slice(1).map(line => {
-                const values = parseCSVLine(line);
-                const transaction = {};
+            // Use setTimeout to make parsing non-blocking
+            setTimeout(() => {
+                const lines = csvText.trim().split('\n');
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
                 
-                headers.forEach((header, index) => {
-                    transaction[header] = values[index] || '';
-                });
+                // Process in smaller chunks for better performance
+                const chunkSize = 50;
+                transactions = [];
                 
-                // Auto-categorize if category is missing or generic
-                if (!transaction.Category || transaction.Category === 'Miscellaneous') {
-                    transaction.Category = categorizeTransaction(transaction.Description, parseFloat(transaction.Amount));
-                }
+                const processChunk = (startIndex) => {
+                    const endIndex = Math.min(startIndex + chunkSize, lines.length);
+                    
+                    for (let i = startIndex; i < endIndex; i++) {
+                        if (i === 0) continue; // Skip header
+                        
+                        const values = parseCSVLine(lines[i]);
+                        const transaction = {};
+                        
+                        headers.forEach((header, index) => {
+                            transaction[header] = values[index] || '';
+                        });
+                        
+                        // Auto-categorize if category is missing or generic
+                        if (!transaction.Category || transaction.Category === 'Miscellaneous') {
+                            transaction.Category = categorizeTransaction(transaction.Description, parseFloat(transaction.Amount));
+                        }
+                        
+                        transaction.Amount = parseFloat(transaction.Amount) || 0;
+                        transaction.Date = new Date(transaction.Date);
+                        
+                        if (transaction.Amount !== 0) {
+                            transactions.push(transaction);
+                        }
+                    }
+                    
+                    // Process next chunk or finish
+                    if (endIndex < lines.length) {
+                        setTimeout(() => processChunk(endIndex), 10);
+                    } else {
+                        // All done - update dashboard
+                        updateDashboard();
+                        showLoading(false);
+                    }
+                };
                 
-                transaction.Amount = parseFloat(transaction.Amount) || 0;
-                transaction.Date = new Date(transaction.Date);
-                
-                return transaction;
-            }).filter(t => t.Amount !== 0);
-
-            updateDashboard();
+                processChunk(0);
+            }, 100);
         }
 
         function parseCSVLine(line) {
@@ -741,13 +767,16 @@
             return result;
         }
 
-        // Update dashboard
+        // Optimized dashboard update with async operations
         function updateDashboard() {
+            // Update summary cards immediately (fastest)
             updateSummaryCards();
-            updateCharts();
-            updateInsights();
-            updateTransactionsList();
-            updateCategoryFilter();
+            
+            // Stagger chart updates to prevent blocking
+            setTimeout(() => updateCharts(), 50);
+            setTimeout(() => updateInsights(), 100);
+            setTimeout(() => updateTransactionsList(), 150);
+            setTimeout(() => updateCategoryFilter(), 200);
         }
 
         function updateSummaryCards() {
@@ -766,10 +795,12 @@
             createTrendsChart();
         }
 
+        // Optimized chart creation with performance improvements
         function createCategoryChart() {
             const categoryTotals = {};
             const expenseTransactions = transactions.filter(t => t.Amount < 0);
             
+            // Use forEach instead of reduce for better performance with large datasets
             expenseTransactions.forEach(t => {
                 const category = t.Category || 'Miscellaneous';
                 categoryTotals[category] = (categoryTotals[category] || 0) + Math.abs(t.Amount);
@@ -777,7 +808,7 @@
 
             const sortedCategories = Object.entries(categoryTotals)
                 .sort(([,a], [,b]) => b - a)
-                .slice(0, 8);
+                .slice(0, 8); // Limit to top 8 for performance
 
             const labels = sortedCategories.map(([category]) => category);
             const data = sortedCategories.map(([,amount]) => amount);
@@ -785,7 +816,10 @@
                 categoryMappings.categories[category]?.color || '#adb5bd'
             );
 
-            if (charts.category) charts.category.destroy();
+            // Destroy existing chart if it exists
+            if (charts.category) {
+                charts.category.destroy();
+            }
 
             const ctx = document.getElementById('categoryChart').getContext('2d');
             charts.category = new Chart(ctx, {
@@ -802,12 +836,18 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 800 // Faster animation
+                    },
                     plugins: {
                         legend: {
                             position: 'bottom',
                             labels: {
-                                padding: 20,
-                                usePointStyle: true
+                                padding: 15,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
                             }
                         }
                     }
@@ -818,6 +858,7 @@
         function createTrendsChart() {
             const monthlyData = {};
             
+            // Optimized monthly aggregation
             transactions.forEach(t => {
                 const monthKey = `${t.Date.getFullYear()}-${String(t.Date.getMonth() + 1).padStart(2, '0')}`;
                 if (!monthlyData[monthKey]) {
@@ -835,7 +876,10 @@
             const incomeData = sortedMonths.map(month => monthlyData[month].income);
             const expenseData = sortedMonths.map(month => monthlyData[month].expenses);
 
-            if (charts.trends) charts.trends.destroy();
+            // Destroy existing chart
+            if (charts.trends) {
+                charts.trends.destroy();
+            }
 
             const ctx = document.getElementById('trendsChart').getContext('2d');
             charts.trends = new Chart(ctx, {
@@ -843,7 +887,8 @@
                 data: {
                     labels: sortedMonths.map(month => {
                         const [year, monthNum] = month.split('-');
-                        return new Date(year, monthNum - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                        const date = new Date(year, monthNum - 1);
+                        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
                     }),
                     datasets: [{
                         label: 'Income',
@@ -851,22 +896,38 @@
                         borderColor: '#28a745',
                         backgroundColor: 'rgba(40, 167, 69, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }, {
                         label: 'Expenses',
                         data: expenseData,
                         borderColor: '#dc3545',
                         backgroundColor: 'rgba(220, 53, 69, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 800
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     plugins: {
                         legend: {
-                            position: 'top'
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -874,7 +935,284 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return '$' + value.toLocaleString();
+                                    return '
+
+        function updateInsights() {
+            const insights = generateInsights();
+            const insightsList = document.getElementById('insightsList');
+            
+            insightsList.innerHTML = insights.map(insight => `
+                <div class="insight-item">
+                    <div class="insight-title">${insight.title}</div>
+                    <div>${insight.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function generateInsights() {
+            const insights = [];
+            const totalExpenses = Math.abs(transactions.filter(t => t.Amount < 0).reduce((sum, t) => sum + t.Amount, 0));
+            const totalIncome = transactions.filter(t => t.Amount > 0).reduce((sum, t) => sum + t.Amount, 0);
+            
+            // Category analysis
+            const categoryTotals = {};
+            transactions.filter(t => t.Amount < 0).forEach(t => {
+                const category = t.Category || 'Miscellaneous';
+                categoryTotals[category] = (categoryTotals[category] || 0) + Math.abs(t.Amount);
+            });
+
+            const topCategory = Object.entries(categoryTotals).sort(([,a], [,b]) => b - a)[0];
+            if (topCategory) {
+                const percentage = ((topCategory[1] / totalExpenses) * 100).toFixed(1);
+                insights.push({
+                    title: `Highest Spending Category: ${topCategory[0]}`,
+                    description: `You spent $${topCategory[1].toLocaleString()} (${percentage}%) on ${topCategory[0]}. Consider if this aligns with your priorities.`
+                });
+            }
+
+            // Savings rate
+            const savingsRate = ((totalIncome - totalExpenses) / totalIncome * 100).toFixed(1);
+            insights.push({
+                title: `Savings Rate: ${savingsRate}%`,
+                description: savingsRate > 20 ? 
+                    'Excellent! You\'re saving over 20% of your income.' :
+                    savingsRate > 10 ? 
+                    'Good savings rate! Consider increasing to 20% if possible.' :
+                    'Consider reducing expenses to increase your savings rate.'
+            });
+
+            // Dining analysis
+            const diningSpend = categoryTotals['Food & Dining'] || 0;
+            const grocerySpend = categoryTotals['Groceries'] || 0;
+            if (diningSpend > grocerySpend) {
+                insights.push({
+                    title: 'Dining vs Groceries',
+                    description: `You spend more on dining out ($${diningSpend.toLocaleString()}) than groceries ($${grocerySpend.toLocaleString()}). Cooking at home more could save money.`
+                });
+            }
+
+            return insights;
+        }
+
+        function updateTransactionsList() {
+            currentTransactionsToShow = transactions;
+            currentlyLoaded = 25; // Reset load counter
+            renderTransactions(transactions);
+        }
+        
+        // Add event listeners with optimized filtering
+        document.getElementById('searchInput').addEventListener('input', filterTransactions);
+        document.getElementById('categoryFilter').addEventListener('change', filterTransactions);
+
+        // Optimized transaction list rendering with virtual scrolling concept
+        function renderTransactions(transactionsToShow) {
+            const list = document.getElementById('transactionsList');
+            
+            // Limit initial render to 25 transactions for better performance
+            const maxInitialRender = 25;
+            const transactionsToRender = transactionsToShow.slice(0, maxInitialRender);
+            
+            list.innerHTML = transactionsToRender.map(t => {
+                const category = categoryMappings.categories[t.Category] || categoryMappings.categories['Miscellaneous'];
+                const amountClass = t.Amount > 0 ? 'positive' : 'negative';
+                const formattedAmount = Math.abs(t.Amount).toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                });
+                
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-date">${t.Date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}</div>
+                        <div class="transaction-description">${t.Description}</div>
+                        <div class="transaction-amount ${amountClass}">${formattedAmount}</div>
+                        <div class="transaction-category">
+                            <span class="category-badge" style="background-color: ${category.color}">
+                                ${category.icon} ${t.Category}
+                            </span>
+                        </div>
+                        <div>${t.Account}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add "Load More" button if there are more transactions
+            if (transactionsToShow.length > maxInitialRender) {
+                const loadMoreBtn = document.createElement('div');
+                loadMoreBtn.style.cssText = 'text-align: center; padding: 20px;';
+                loadMoreBtn.innerHTML = `
+                    <button onclick="loadMoreTransactions()" style="
+                        background: #667eea; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 20px; 
+                        border-radius: 6px; 
+                        cursor: pointer;
+                        font-weight: 500;
+                    ">
+                        Load More (${transactionsToShow.length - maxInitialRender} remaining)
+                    </button>
+                `;
+                list.appendChild(loadMoreBtn);
+            }
+        }
+
+        // Global variable to track loaded transactions
+        let currentTransactionsToShow = [];
+        let currentlyLoaded = 25;
+
+        function loadMoreTransactions() {
+            const nextBatch = 25;
+            const endIndex = Math.min(currentlyLoaded + nextBatch, currentTransactionsToShow.length);
+            
+            const list = document.getElementById('transactionsList');
+            const loadMoreBtn = list.querySelector('button');
+            if (loadMoreBtn) loadMoreBtn.parentElement.remove();
+            
+            for (let i = currentlyLoaded; i < endIndex; i++) {
+                const t = currentTransactionsToShow[i];
+                const category = categoryMappings.categories[t.Category] || categoryMappings.categories['Miscellaneous'];
+                const amountClass = t.Amount > 0 ? 'positive' : 'negative';
+                const formattedAmount = Math.abs(t.Amount).toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                });
+                
+                const transactionDiv = document.createElement('div');
+                transactionDiv.className = 'transaction-item';
+                transactionDiv.innerHTML = `
+                    <div class="transaction-date">${t.Date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}</div>
+                    <div class="transaction-description">${t.Description}</div>
+                    <div class="transaction-amount ${amountClass}">${formattedAmount}</div>
+                    <div class="transaction-category">
+                        <span class="category-badge" style="background-color: ${category.color}">
+                            ${category.icon} ${t.Category}
+                        </span>
+                    </div>
+                    <div>${t.Account}</div>
+                `;
+                list.appendChild(transactionDiv);
+            }
+            
+            currentlyLoaded = endIndex;
+            
+            if (endIndex < currentTransactionsToShow.length) {
+                const loadMoreBtn = document.createElement('div');
+                loadMoreBtn.style.cssText = 'text-align: center; padding: 20px;';
+                loadMoreBtn.innerHTML = `
+                    <button onclick="loadMoreTransactions()" style="
+                        background: #667eea; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 20px; 
+                        border-radius: 6px; 
+                        cursor: pointer;
+                        font-weight: 500;
+                    ">
+                        Load More (${currentTransactionsToShow.length - endIndex} remaining)
+                    </button>
+                `;
+                list.appendChild(loadMoreBtn);
+            }
+        }
+
+        function updateCategoryFilter() {
+            const categories = [...new Set(transactions.map(t => t.Category))].sort();
+            const filter = document.getElementById('categoryFilter');
+            
+            filter.innerHTML = '<option value="">All Categories</option>' +
+                categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        }
+
+        // Optimized filtering with debouncing
+        let filterTimeout;
+        
+        function filterTransactions() {
+            // Clear previous timeout to debounce rapid typing
+            clearTimeout(filterTimeout);
+            
+            filterTimeout = setTimeout(() => {
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const selectedCategory = document.getElementById('categoryFilter').value;
+                
+                let filtered = transactions;
+                
+                if (searchTerm) {
+                    filtered = filtered.filter(t => 
+                        t.Description.toLowerCase().includes(searchTerm) ||
+                        t.Category.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                if (selectedCategory) {
+                    filtered = filtered.filter(t => t.Category === selectedCategory);
+                }
+                
+                currentTransactionsToShow = filtered;
+                currentlyLoaded = 25; // Reset load counter
+                renderTransactions(filtered);
+            }, 300); // 300ms debounce
+        }
+
+        // Export functionality
+        function exportReport() {
+            const report = generateReport();
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `finance-analysis-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function generateReport() {
+            const totalIncome = transactions.filter(t => t.Amount > 0).reduce((sum, t) => sum + t.Amount, 0);
+            const totalExpenses = Math.abs(transactions.filter(t => t.Amount < 0).reduce((sum, t) => sum + t.Amount, 0));
+            const balance = totalIncome - totalExpenses;
+            
+            return `PERSONAL FINANCE ANALYSIS REPORT
+Generated: ${new Date().toLocaleDateString()}
+
+SUMMARY
+=======
+Total Income: $${totalIncome.toLocaleString()}
+Total Expenses: $${totalExpenses.toLocaleString()}
+Net Balance: $${balance.toLocaleString()}
+Total Transactions: ${transactions.length}
+Savings Rate: ${((balance / totalIncome) * 100).toFixed(1)}%
+
+SPENDING BY CATEGORY
+==================
+${Object.entries(transactions.filter(t => t.Amount < 0).reduce((acc, t) => {
+    const cat = t.Category || 'Miscellaneous';
+    acc[cat] = (acc[cat] || 0) + Math.abs(t.Amount);
+    return acc;
+}, {})).sort(([,a], [,b]) => b - a).map(([cat, amount]) => 
+    `${cat}: $${amount.toLocaleString()}`
+).join('\n')}
+
+This report was generated by the Personal Finance Analyzer
+Built with Claude AI assistance
+`;
+        }
+
+        // Initialize - no external file loading needed
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategoryMappings(); // Now uses embedded data
+        });
+    </script>
+</body>
+</html> + (value/1000).toFixed(0) + 'k';
+                                },
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 11
                                 }
                             }
                         }
