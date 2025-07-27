@@ -1,0 +1,191 @@
+{
+  "categories": {
+    "Income": {
+      "keywords": ["salary", "deposit", "paycheck", "freelance", "payment", "income", "wages", "bonus"],
+      "merchants": [],
+      "color": "#28a745",
+      "icon": "💰"
+    },
+    "Housing": {
+      "keywords": ["rent", "mortgage", "property tax", "hoa", "property management"],
+      "merchants": ["rent payment", "property"],
+      "color": "#6f42c1",
+      "icon": "🏠"
+    },
+    "Groceries": {
+      "keywords": ["grocery", "market", "food", "supermarket"],
+      "merchants": [
+        "safeway", "whole foods", "trader joe", "costco", "fred meyer", 
+        "qfc", "kroger", "walmart", "target", "pcc", "metropolitan market",
+        "king soopers", "harris teeter", "publix", "wegmans"
+      ],
+      "color": "#20c997",
+      "icon": "🛒"
+    },
+    "Food & Dining": {
+      "keywords": ["restaurant", "cafe", "coffee", "dining", "bar", "pub", "grill", "pizza", "delivery"],
+      "merchants": [
+        "starbucks", "chipotle", "mcdonald", "subway", "panera", "olive garden",
+        "taco bell", "five guys", "pizza hut", "dunkin", "kfc", "burger king",
+        "chick-fil-a", "domino", "papa john", "uber eats", "doordash", "grubhub"
+      ],
+      "color": "#fd7e14",
+      "icon": "🍽️"
+    },
+    "Transportation": {
+      "keywords": ["gas", "fuel", "parking", "toll", "car wash", "oil change", "tire", "repair", "maintenance"],
+      "merchants": [
+        "shell", "chevron", "exxon", "bp", "mobil", "arco", "76", "costco gas",
+        "uber", "lyft", "taxi", "bus", "metro", "parking", "car wash"
+      ],
+      "color": "#007bff",
+      "icon": "🚗"
+    },
+    "Utilities": {
+      "keywords": ["electric", "electricity", "gas bill", "water", "sewer", "internet", "phone", "cable", "trash"],
+      "merchants": [
+        "pse", "seattle city light", "puget sound energy", "comcast", "xfinity",
+        "verizon", "at&t", "t-mobile", "sprint", "century link", "wave"
+      ],
+      "color": "#6c757d",
+      "icon": "⚡"
+    },
+    "Entertainment": {
+      "keywords": ["movie", "theater", "streaming", "subscription", "music", "games", "concert"],
+      "merchants": [
+        "netflix", "spotify", "apple music", "hulu", "disney", "amazon prime",
+        "youtube", "amc", "regal", "cinemark", "xbox", "playstation", "steam"
+      ],
+      "color": "#e83e8c",
+      "icon": "🎬"
+    },
+    "Shopping": {
+      "keywords": ["store", "shopping", "retail", "online", "purchase", "buy"],
+      "merchants": [
+        "amazon", "target", "walmart", "best buy", "nordstrom", "macy",
+        "microsoft", "apple store", "ebay", "etsy", "costco", "sams club"
+      ],
+      "color": "#17a2b8",
+      "icon": "🛍️"
+    },
+    "Healthcare": {
+      "keywords": ["medical", "doctor", "dentist", "pharmacy", "hospital", "clinic", "prescription"],
+      "merchants": [
+        "cvs", "walgreens", "rite aid", "kaiser", "virginia mason",
+        "swedish medical", "overlake", "group health", "pharmacy"
+      ],
+      "color": "#dc3545",
+      "icon": "🏥"
+    },
+    "Insurance": {
+      "keywords": ["insurance", "premium", "policy"],
+      "merchants": ["geico", "state farm", "allstate", "progressive", "usaa", "aaa"],
+      "color": "#343a40",
+      "icon": "🛡️"
+    },
+    "Health & Fitness": {
+      "keywords": ["gym", "fitness", "yoga", "trainer", "supplement", "workout"],
+      "merchants": [
+        "24 hour fitness", "planet fitness", "gold gym", "la fitness",
+        "lifetime", "anytime fitness", "crossfit", "yoga"
+      ],
+      "color": "#28a745",
+      "icon": "💪"
+    },
+    "Recreation": {
+      "keywords": ["sports", "outdoor", "recreation", "hobby", "game", "equipment"],
+      "merchants": [
+        "rei", "dick sporting", "big 5", "sports authority",
+        "academy sports", "modell", "play it again"
+      ],
+      "color": "#ffc107",
+      "icon": "⚽"
+    },
+    "Home Improvement": {
+      "keywords": ["hardware", "improvement", "repair", "tools", "garden", "lawn"],
+      "merchants": [
+        "home depot", "lowe", "ace hardware", "menards", 
+        "harbor freight", "sherwin williams"
+      ],
+      "color": "#795548",
+      "icon": "🔨"
+    },
+    "Personal Care": {
+      "keywords": ["salon", "spa", "barber", "beauty", "cosmetics", "personal"],
+      "merchants": ["salon", "spa", "ulta", "sephora", "sally beauty"],
+      "color": "#f8bbd9",
+      "icon": "💄"
+    },
+    "Education": {
+      "keywords": ["school", "education", "tuition", "books", "course", "training"],
+      "merchants": ["university", "college", "school", "textbook", "coursera"],
+      "color": "#6610f2",
+      "icon": "📚"
+    },
+    "Miscellaneous": {
+      "keywords": ["other", "misc", "unknown", "cash", "atm", "fee"],
+      "merchants": [],
+      "color": "#adb5bd",
+      "icon": "❓"
+    }
+  },
+  "rules": {
+    "amount_based": {
+      "large_deposits": {
+        "condition": "amount > 1000 && description.includes('deposit')",
+        "category": "Income"
+      },
+      "small_cash": {
+        "condition": "amount < 20 && description.includes('cash')",
+        "category": "Miscellaneous"
+      }
+    },
+    "pattern_matching": {
+      "subscription_services": {
+        "pattern": "monthly|subscription|recurring",
+        "categories": ["Entertainment", "Utilities", "Health & Fitness"]
+      },
+      "fuel_stations": {
+        "pattern": "shell|chevron|exxon|bp|mobil|arco|76",
+        "category": "Transportation"
+      }
+    }
+  },
+  "budget_suggestions": {
+    "Groceries": {
+      "percentage": 12,
+      "max_recommended": 600
+    },
+    "Food & Dining": {
+      "percentage": 8,
+      "max_recommended": 400
+    },
+    "Transportation": {
+      "percentage": 15,
+      "max_recommended": 750
+    },
+    "Entertainment": {
+      "percentage": 5,
+      "max_recommended": 250
+    },
+    "Shopping": {
+      "percentage": 10,
+      "max_recommended": 500
+    },
+    "Healthcare": {
+      "percentage": 8,
+      "max_recommended": 400
+    },
+    "Utilities": {
+      "percentage": 10,
+      "max_recommended": 500
+    }
+  },
+  "optimization_tips": {
+    "high_dining": "Consider meal planning and cooking at home more often to reduce dining expenses.",
+    "frequent_shopping": "Try creating shopping lists and waiting 24 hours before non-essential purchases.",
+    "high_transportation": "Consider carpooling, public transit, or combining errands to reduce fuel costs.",
+    "subscription_overload": "Review all subscription services - cancel unused ones and look for family plans.",
+    "irregular_income": "Build an emergency fund equal to 3-6 months of expenses for income stability."
+  }
+}
