@@ -17,7 +17,7 @@ A comprehensive finance dashboard built with Claude AI assistance that processes
 ⏳ Phase 5: Documentation & testing  
 
 ## 🚀 Live Demo
-[View Live Dashboard](https://htmlpreview.github.io/?https://raw.githubusercontent.com/yourusername/finance-analyzer/main/src/analyzer.html)
+[View Live Dashboard](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kryali005/finance-analyzer/main/src/analyzer.html)
 
 ## Features Showcase
 - **Smart Upload**: Drag & drop CSV files or try demo data
