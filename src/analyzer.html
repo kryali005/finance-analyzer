@@ -435,94 +435,30 @@
         let categoryMappings = {};
         let charts = {};
 
-        // Embedded category mappings (no external file needed)
-        function loadCategoryMappings() {
-            categoryMappings = {
+        // Load category mappings
+        async function loadCategoryMappings() {
+            try {
+                const response = await fetch('./data/category_mappings.json');
+                categoryMappings = await response.json();
+            } catch (error) {
+                console.warn('Could not load category mappings, using defaults');
+                categoryMappings = getDefaultCategories();
+            }
+        }
+
+        function getDefaultCategories() {
+            return {
                 categories: {
-                    "Income": { 
-                        keywords: ["salary", "deposit", "paycheck", "freelance", "payment", "income", "wages", "bonus"],
-                        merchants: [],
-                        color: "#28a745", 
-                        icon: "💰" 
-                    },
-                    "Housing": { 
-                        keywords: ["rent", "mortgage", "property tax", "hoa", "property management"],
-                        merchants: ["rent payment", "property"],
-                        color: "#6f42c1", 
-                        icon: "🏠" 
-                    },
-                    "Groceries": { 
-                        keywords: ["grocery", "market", "food", "supermarket"],
-                        merchants: ["safeway", "whole foods", "trader joe", "costco", "fred meyer", "qfc", "kroger", "walmart", "target", "pcc", "metropolitan market"],
-                        color: "#20c997", 
-                        icon: "🛒" 
-                    },
-                    "Food & Dining": { 
-                        keywords: ["restaurant", "cafe", "coffee", "dining", "bar", "pub", "grill", "pizza", "delivery"],
-                        merchants: ["starbucks", "chipotle", "mcdonald", "subway", "panera", "olive garden", "taco bell", "five guys", "pizza hut", "dunkin", "kfc"],
-                        color: "#fd7e14", 
-                        icon: "🍽️" 
-                    },
-                    "Transportation": { 
-                        keywords: ["gas", "fuel", "parking", "toll", "car wash", "oil change", "tire", "repair", "maintenance"],
-                        merchants: ["shell", "chevron", "exxon", "bp", "mobil", "arco", "76", "costco gas", "uber", "lyft", "taxi"],
-                        color: "#007bff", 
-                        icon: "🚗" 
-                    },
-                    "Utilities": { 
-                        keywords: ["electric", "electricity", "gas bill", "water", "sewer", "internet", "phone", "cable", "trash"],
-                        merchants: ["pse", "seattle city light", "puget sound energy", "comcast", "xfinity", "verizon", "at&t", "t-mobile"],
-                        color: "#6c757d", 
-                        icon: "⚡" 
-                    },
-                    "Entertainment": { 
-                        keywords: ["movie", "theater", "streaming", "subscription", "music", "games", "concert"],
-                        merchants: ["netflix", "spotify", "apple music", "hulu", "disney", "amazon prime", "youtube", "amc", "regal"],
-                        color: "#e83e8c", 
-                        icon: "🎬" 
-                    },
-                    "Shopping": { 
-                        keywords: ["store", "shopping", "retail", "online", "purchase", "buy"],
-                        merchants: ["amazon", "target", "walmart", "best buy", "nordstrom", "macy", "microsoft", "apple store"],
-                        color: "#17a2b8", 
-                        icon: "🛍️" 
-                    },
-                    "Healthcare": { 
-                        keywords: ["medical", "doctor", "dentist", "pharmacy", "hospital", "clinic", "prescription"],
-                        merchants: ["cvs", "walgreens", "rite aid", "kaiser", "virginia mason", "pharmacy"],
-                        color: "#dc3545", 
-                        icon: "🏥" 
-                    },
-                    "Insurance": { 
-                        keywords: ["insurance", "premium", "policy"],
-                        merchants: ["geico", "state farm", "allstate", "progressive", "usaa", "aaa"],
-                        color: "#343a40", 
-                        icon: "🛡️" 
-                    },
-                    "Health & Fitness": { 
-                        keywords: ["gym", "fitness", "yoga", "trainer", "supplement", "workout"],
-                        merchants: ["24 hour fitness", "planet fitness", "gold gym", "la fitness", "gym"],
-                        color: "#28a745", 
-                        icon: "💪" 
-                    },
-                    "Recreation": { 
-                        keywords: ["sports", "outdoor", "recreation", "hobby", "game", "equipment"],
-                        merchants: ["rei", "dick sporting", "big 5", "sports authority"],
-                        color: "#ffc107", 
-                        icon: "⚽" 
-                    },
-                    "Home Improvement": { 
-                        keywords: ["hardware", "improvement", "repair", "tools", "garden", "lawn"],
-                        merchants: ["home depot", "lowe", "ace hardware", "menards"],
-                        color: "#795548", 
-                        icon: "🔨" 
-                    },
-                    "Miscellaneous": { 
-                        keywords: ["other", "misc", "unknown", "cash", "atm", "fee"],
-                        merchants: [],
-                        color: "#adb5bd", 
-                        icon: "❓" 
-                    }
+                    "Income": { color: "#28a745", icon: "💰" },
+                    "Housing": { color: "#6f42c1", icon: "🏠" },
+                    "Groceries": { color: "#20c997", icon: "🛒" },
+                    "Food & Dining": { color: "#fd7e14", icon: "🍽️" },
+                    "Transportation": { color: "#007bff", icon: "🚗" },
+                    "Utilities": { color: "#6c757d", icon: "⚡" },
+                    "Entertainment": { color: "#e83e8c", icon: "🎬" },
+                    "Shopping": { color: "#17a2b8", icon: "🛍️" },
+                    "Healthcare": { color: "#dc3545", icon: "🏥" },
+                    "Miscellaneous": { color: "#adb5bd", icon: "❓" }
                 }
             };
         }
@@ -549,126 +485,20 @@
             return 'Miscellaneous';
         }
 
-        // Embedded demo data (no external file needed)
-        function loadDemoData() {
+        // Load demo data
+        async function loadDemoData() {
             showLoading(true);
-            
-            const demoCSV = `Date,Description,Amount,Category,Account
-2024-07-26,Salary Deposit,4500.00,Income,Checking
-2024-07-25,Starbucks Coffee,5.47,Food & Dining,Credit Card
-2024-07-25,Shell Gas Station,42.33,Transportation,Credit Card
-2024-07-24,Amazon Purchase,89.99,Shopping,Credit Card
-2024-07-24,Safeway Grocery,127.84,Groceries,Debit Card
-2024-07-23,Netflix Subscription,15.99,Entertainment,Credit Card
-2024-07-22,Electric Bill - PSE,145.67,Utilities,Checking
-2024-07-21,Target Shopping,67.42,Shopping,Credit Card
-2024-07-20,Chipotle Mexican Grill,12.85,Food & Dining,Credit Card
-2024-07-19,Chevron Gas,38.91,Transportation,Credit Card
-2024-07-18,REI Outdoor Gear,234.56,Recreation,Credit Card
-2024-07-17,Whole Foods Market,92.33,Groceries,Debit Card
-2024-07-16,Spotify Premium,9.99,Entertainment,Credit Card
-2024-07-15,Water Bill,34.22,Utilities,Checking
-2024-07-14,McDonald's,8.47,Food & Dining,Credit Card
-2024-07-13,Costco Wholesale,178.92,Groceries,Credit Card
-2024-07-12,Rent Payment,1850.00,Housing,Checking
-2024-07-11,Uber Ride,23.45,Transportation,Credit Card
-2024-07-10,Best Buy Electronics,299.99,Shopping,Credit Card
-2024-07-09,Panera Bread,14.32,Food & Dining,Credit Card
-2024-07-08,Internet Bill - Comcast,79.99,Utilities,Checking
-2024-07-07,CVS Pharmacy,27.84,Healthcare,Credit Card
-2024-07-06,Home Depot,156.78,Home Improvement,Credit Card
-2024-07-05,Trader Joe's,65.43,Groceries,Debit Card
-2024-07-04,Movie Theater AMC,28.50,Entertainment,Credit Card
-2024-07-03,Car Insurance,167.50,Insurance,Checking
-2024-07-02,Freelance Payment,850.00,Income,Checking
-2024-07-01,Gym Membership,49.99,Health & Fitness,Credit Card
-2024-06-30,Starbucks Coffee,6.23,Food & Dining,Credit Card
-2024-06-29,Shell Gas Station,45.67,Transportation,Credit Card
-2024-06-28,Amazon Prime,139.00,Shopping,Credit Card
-2024-06-27,QFC Grocery,134.56,Groceries,Debit Card
-2024-06-26,Salary Deposit,4500.00,Income,Checking
-2024-06-25,Hulu Subscription,12.99,Entertainment,Credit Card
-2024-06-24,Gas Bill,67.89,Utilities,Checking
-2024-06-23,Nordstrom Shopping,189.44,Shopping,Credit Card
-2024-06-22,Taco Bell,9.67,Food & Dining,Credit Card
-2024-06-21,76 Gas Station,41.23,Transportation,Credit Card
-2024-06-20,Dick's Sporting Goods,123.45,Recreation,Credit Card
-2024-06-19,PCC Natural Markets,87.65,Groceries,Debit Card
-2024-06-18,Apple Music,10.99,Entertainment,Credit Card
-2024-06-17,Sewer Bill,45.33,Utilities,Checking
-2024-06-16,Subway Sandwich,11.25,Food & Dining,Credit Card
-2024-06-15,Fred Meyer,167.88,Groceries,Credit Card
-2024-06-14,Lyft Ride,18.76,Transportation,Credit Card
-2024-06-13,Microsoft Store,79.99,Shopping,Credit Card
-2024-06-12,Rent Payment,1850.00,Housing,Checking
-2024-06-11,Olive Garden,43.87,Food & Dining,Credit Card
-2024-06-10,Chevron Gas,39.54,Transportation,Credit Card
-2024-06-09,Lowe's Home Improvement,89.33,Home Improvement,Credit Card
-2024-06-08,Metropolitan Market,76.22,Groceries,Debit Card
-2024-06-07,Disney Plus,7.99,Entertainment,Credit Card
-2024-06-06,Dentist Visit,150.00,Healthcare,Credit Card
-2024-06-05,Macy's Shopping,156.78,Shopping,Credit Card
-2024-06-04,Phone Bill - Verizon,85.67,Utilities,Checking
-2024-06-03,Five Guys Burgers,16.45,Food & Dining,Credit Card
-2024-06-02,Arco Gas,37.89,Transportation,Credit Card
-2024-06-01,Health Insurance,234.50,Insurance,Checking
-2024-05-31,Starbucks Coffee,5.89,Food & Dining,Credit Card
-2024-05-30,Costco Gas,52.33,Transportation,Credit Card
-2024-05-29,Target Shopping,98.76,Shopping,Credit Card
-2024-05-28,Whole Foods Market,112.45,Groceries,Debit Card
-2024-05-27,Salary Deposit,4500.00,Income,Checking
-2024-05-26,YouTube Premium,11.99,Entertainment,Credit Card
-2024-05-25,Electric Bill - PSE,123.45,Utilities,Checking
-2024-05-24,Walgreens Pharmacy,31.67,Healthcare,Credit Card
-2024-05-23,Pizza Hut,22.34,Food & Dining,Credit Card
-2024-05-22,Shell Gas Station,44.56,Transportation,Credit Card
-2024-05-21,Amazon Purchase,67.89,Shopping,Credit Card
-2024-05-20,Safeway Grocery,145.67,Groceries,Debit Card
-2024-05-19,Car Wash,15.00,Transportation,Credit Card
-2024-05-18,Freelance Payment,1200.00,Income,Checking
-2024-05-17,Rent Payment,1850.00,Housing,Checking
-2024-05-16,Starbucks Coffee,6.78,Food & Dining,Credit Card
-2024-05-15,Water Bill,32.11,Utilities,Checking
-2024-05-14,Best Buy Electronics,189.99,Shopping,Credit Card
-2024-05-13,Trader Joe's,78.34,Groceries,Debit Card
-2024-05-12,Uber Eats Delivery,24.67,Food & Dining,Credit Card
-2024-05-11,76 Gas Station,43.22,Transportation,Credit Card
-2024-05-10,Home Depot,234.56,Home Improvement,Credit Card
-2024-05-09,QFC Grocery,89.45,Groceries,Debit Card
-2024-05-08,Netflix Subscription,15.99,Entertainment,Credit Card
-2024-05-07,Internet Bill - Comcast,79.99,Utilities,Checking
-2024-05-06,Panera Bread,13.45,Food & Dining,Credit Card
-2024-05-05,Chevron Gas,41.89,Transportation,Credit Card
-2024-05-04,REI Outdoor Gear,178.90,Recreation,Credit Card
-2024-05-03,PCC Natural Markets,95.67,Groceries,Debit Card
-2024-05-02,Gym Membership,49.99,Health & Fitness,Credit Card
-2024-05-01,Car Insurance,167.50,Insurance,Checking
-2024-04-30,Starbucks Coffee,5.23,Food & Dining,Credit Card
-2024-04-29,Arco Gas,38.76,Transportation,Credit Card
-2024-04-28,Amazon Prime Renewal,139.00,Shopping,Credit Card
-2024-04-27,Fred Meyer,156.78,Groceries,Debit Card
-2024-04-26,Salary Deposit,4500.00,Income,Checking
-2024-04-25,Spotify Premium,9.99,Entertainment,Credit Card
-2024-04-24,Gas Bill,89.45,Utilities,Checking
-2024-04-23,Target Shopping,123.67,Shopping,Credit Card
-2024-04-22,Chipotle Mexican Grill,14.56,Food & Dining,Credit Card
-2024-04-21,Shell Gas Station,46.33,Transportation,Credit Card
-2024-04-20,Dick's Sporting Goods,234.78,Recreation,Credit Card
-2024-04-19,Whole Foods Market,101.23,Groceries,Debit Card
-2024-04-18,Apple Music,10.99,Entertainment,Credit Card
-2024-04-17,Sewer Bill,43.22,Utilities,Checking
-2024-04-16,McDonald's,7.89,Food & Dining,Credit Card
-2024-04-15,Costco Wholesale,189.45,Groceries,Credit Card
-2024-04-14,Uber Ride,19.67,Transportation,Credit Card
-2024-04-13,Microsoft Store,99.99,Shopping,Credit Card
-2024-04-12,Rent Payment,1850.00,Housing,Checking`;
-
-            setTimeout(() => {
-                parseCSV(demoCSV);
+            try {
+                const response = await fetch('./data/sample_transactions.csv');
+                const csvText = await response.text();
+                parseCSV(csvText);
                 document.getElementById('uploadStatus').textContent = 'Demo data loaded successfully!';
                 document.getElementById('uploadStatus').className = 'status success';
-                showLoading(false);
-            }, 1000); // Add slight delay for loading animation
+            } catch (error) {
+                console.error('Error loading demo data:', error);
+                document.getElementById('uploadStatus').textContent = 'Error loading demo data';
+            }
+            showLoading(false);
         }
 
         // File upload handler
@@ -692,57 +522,31 @@
             document.getElementById('dashboard').style.display = show ? 'none' : 'block';
         }
 
-        // Optimized CSV parsing with async processing
+        // Parse CSV data
         function parseCSV(csvText) {
-            showLoading(true);
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
             
-            // Use setTimeout to make parsing non-blocking
-            setTimeout(() => {
-                const lines = csvText.trim().split('\n');
-                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            transactions = lines.slice(1).map(line => {
+                const values = parseCSVLine(line);
+                const transaction = {};
                 
-                // Process in smaller chunks for better performance
-                const chunkSize = 50;
-                transactions = [];
+                headers.forEach((header, index) => {
+                    transaction[header] = values[index] || '';
+                });
                 
-                const processChunk = (startIndex) => {
-                    const endIndex = Math.min(startIndex + chunkSize, lines.length);
-                    
-                    for (let i = startIndex; i < endIndex; i++) {
-                        if (i === 0) continue; // Skip header
-                        
-                        const values = parseCSVLine(lines[i]);
-                        const transaction = {};
-                        
-                        headers.forEach((header, index) => {
-                            transaction[header] = values[index] || '';
-                        });
-                        
-                        // Auto-categorize if category is missing or generic
-                        if (!transaction.Category || transaction.Category === 'Miscellaneous') {
-                            transaction.Category = categorizeTransaction(transaction.Description, parseFloat(transaction.Amount));
-                        }
-                        
-                        transaction.Amount = parseFloat(transaction.Amount) || 0;
-                        transaction.Date = new Date(transaction.Date);
-                        
-                        if (transaction.Amount !== 0) {
-                            transactions.push(transaction);
-                        }
-                    }
-                    
-                    // Process next chunk or finish
-                    if (endIndex < lines.length) {
-                        setTimeout(() => processChunk(endIndex), 10);
-                    } else {
-                        // All done - update dashboard
-                        updateDashboard();
-                        showLoading(false);
-                    }
-                };
+                // Auto-categorize if category is missing or generic
+                if (!transaction.Category || transaction.Category === 'Miscellaneous') {
+                    transaction.Category = categorizeTransaction(transaction.Description, parseFloat(transaction.Amount));
+                }
                 
-                processChunk(0);
-            }, 100);
+                transaction.Amount = parseFloat(transaction.Amount) || 0;
+                transaction.Date = new Date(transaction.Date);
+                
+                return transaction;
+            }).filter(t => t.Amount !== 0);
+
+            updateDashboard();
         }
 
         function parseCSVLine(line) {
@@ -767,16 +571,13 @@
             return result;
         }
 
-        // Optimized dashboard update with async operations
+        // Update dashboard
         function updateDashboard() {
-            // Update summary cards immediately (fastest)
             updateSummaryCards();
-            
-            // Stagger chart updates to prevent blocking
-            setTimeout(() => updateCharts(), 50);
-            setTimeout(() => updateInsights(), 100);
-            setTimeout(() => updateTransactionsList(), 150);
-            setTimeout(() => updateCategoryFilter(), 200);
+            updateCharts();
+            updateInsights();
+            updateTransactionsList();
+            updateCategoryFilter();
         }
 
         function updateSummaryCards() {
@@ -795,12 +596,10 @@
             createTrendsChart();
         }
 
-        // Optimized chart creation with performance improvements
         function createCategoryChart() {
             const categoryTotals = {};
             const expenseTransactions = transactions.filter(t => t.Amount < 0);
             
-            // Use forEach instead of reduce for better performance with large datasets
             expenseTransactions.forEach(t => {
                 const category = t.Category || 'Miscellaneous';
                 categoryTotals[category] = (categoryTotals[category] || 0) + Math.abs(t.Amount);
@@ -808,7 +607,7 @@
 
             const sortedCategories = Object.entries(categoryTotals)
                 .sort(([,a], [,b]) => b - a)
-                .slice(0, 8); // Limit to top 8 for performance
+                .slice(0, 8);
 
             const labels = sortedCategories.map(([category]) => category);
             const data = sortedCategories.map(([,amount]) => amount);
@@ -816,10 +615,7 @@
                 categoryMappings.categories[category]?.color || '#adb5bd'
             );
 
-            // Destroy existing chart if it exists
-            if (charts.category) {
-                charts.category.destroy();
-            }
+            if (charts.category) charts.category.destroy();
 
             const ctx = document.getElementById('categoryChart').getContext('2d');
             charts.category = new Chart(ctx, {
@@ -836,18 +632,12 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: {
-                        duration: 800 // Faster animation
-                    },
                     plugins: {
                         legend: {
                             position: 'bottom',
                             labels: {
-                                padding: 15,
-                                usePointStyle: true,
-                                font: {
-                                    size: 12
-                                }
+                                padding: 20,
+                                usePointStyle: true
                             }
                         }
                     }
@@ -858,7 +648,6 @@
         function createTrendsChart() {
             const monthlyData = {};
             
-            // Optimized monthly aggregation
             transactions.forEach(t => {
                 const monthKey = `${t.Date.getFullYear()}-${String(t.Date.getMonth() + 1).padStart(2, '0')}`;
                 if (!monthlyData[monthKey]) {
@@ -876,10 +665,7 @@
             const incomeData = sortedMonths.map(month => monthlyData[month].income);
             const expenseData = sortedMonths.map(month => monthlyData[month].expenses);
 
-            // Destroy existing chart
-            if (charts.trends) {
-                charts.trends.destroy();
-            }
+            if (charts.trends) charts.trends.destroy();
 
             const ctx = document.getElementById('trendsChart').getContext('2d');
             charts.trends = new Chart(ctx, {
@@ -887,8 +673,7 @@
                 data: {
                     labels: sortedMonths.map(month => {
                         const [year, monthNum] = month.split('-');
-                        const date = new Date(year, monthNum - 1);
-                        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                        return new Date(year, monthNum - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
                     }),
                     datasets: [{
                         label: 'Income',
@@ -896,38 +681,22 @@
                         borderColor: '#28a745',
                         backgroundColor: 'rgba(40, 167, 69, 0.1)',
                         tension: 0.4,
-                        fill: true,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        fill: true
                     }, {
                         label: 'Expenses',
                         data: expenseData,
                         borderColor: '#dc3545',
                         backgroundColor: 'rgba(220, 53, 69, 0.1)',
                         tension: 0.4,
-                        fill: true,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        fill: true
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: {
-                        duration: 800
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
                     plugins: {
                         legend: {
-                            position: 'top',
-                            labels: {
-                                font: {
-                                    size: 12
-                                }
-                            }
+                            position: 'top'
                         }
                     },
                     scales: {
@@ -935,284 +704,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return '
-
-        function updateInsights() {
-            const insights = generateInsights();
-            const insightsList = document.getElementById('insightsList');
-            
-            insightsList.innerHTML = insights.map(insight => `
-                <div class="insight-item">
-                    <div class="insight-title">${insight.title}</div>
-                    <div>${insight.description}</div>
-                </div>
-            `).join('');
-        }
-
-        function generateInsights() {
-            const insights = [];
-            const totalExpenses = Math.abs(transactions.filter(t => t.Amount < 0).reduce((sum, t) => sum + t.Amount, 0));
-            const totalIncome = transactions.filter(t => t.Amount > 0).reduce((sum, t) => sum + t.Amount, 0);
-            
-            // Category analysis
-            const categoryTotals = {};
-            transactions.filter(t => t.Amount < 0).forEach(t => {
-                const category = t.Category || 'Miscellaneous';
-                categoryTotals[category] = (categoryTotals[category] || 0) + Math.abs(t.Amount);
-            });
-
-            const topCategory = Object.entries(categoryTotals).sort(([,a], [,b]) => b - a)[0];
-            if (topCategory) {
-                const percentage = ((topCategory[1] / totalExpenses) * 100).toFixed(1);
-                insights.push({
-                    title: `Highest Spending Category: ${topCategory[0]}`,
-                    description: `You spent $${topCategory[1].toLocaleString()} (${percentage}%) on ${topCategory[0]}. Consider if this aligns with your priorities.`
-                });
-            }
-
-            // Savings rate
-            const savingsRate = ((totalIncome - totalExpenses) / totalIncome * 100).toFixed(1);
-            insights.push({
-                title: `Savings Rate: ${savingsRate}%`,
-                description: savingsRate > 20 ? 
-                    'Excellent! You\'re saving over 20% of your income.' :
-                    savingsRate > 10 ? 
-                    'Good savings rate! Consider increasing to 20% if possible.' :
-                    'Consider reducing expenses to increase your savings rate.'
-            });
-
-            // Dining analysis
-            const diningSpend = categoryTotals['Food & Dining'] || 0;
-            const grocerySpend = categoryTotals['Groceries'] || 0;
-            if (diningSpend > grocerySpend) {
-                insights.push({
-                    title: 'Dining vs Groceries',
-                    description: `You spend more on dining out ($${diningSpend.toLocaleString()}) than groceries ($${grocerySpend.toLocaleString()}). Cooking at home more could save money.`
-                });
-            }
-
-            return insights;
-        }
-
-        function updateTransactionsList() {
-            currentTransactionsToShow = transactions;
-            currentlyLoaded = 25; // Reset load counter
-            renderTransactions(transactions);
-        }
-        
-        // Add event listeners with optimized filtering
-        document.getElementById('searchInput').addEventListener('input', filterTransactions);
-        document.getElementById('categoryFilter').addEventListener('change', filterTransactions);
-
-        // Optimized transaction list rendering with virtual scrolling concept
-        function renderTransactions(transactionsToShow) {
-            const list = document.getElementById('transactionsList');
-            
-            // Limit initial render to 25 transactions for better performance
-            const maxInitialRender = 25;
-            const transactionsToRender = transactionsToShow.slice(0, maxInitialRender);
-            
-            list.innerHTML = transactionsToRender.map(t => {
-                const category = categoryMappings.categories[t.Category] || categoryMappings.categories['Miscellaneous'];
-                const amountClass = t.Amount > 0 ? 'positive' : 'negative';
-                const formattedAmount = Math.abs(t.Amount).toLocaleString('en-US', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                });
-                
-                return `
-                    <div class="transaction-item">
-                        <div class="transaction-date">${t.Date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}</div>
-                        <div class="transaction-description">${t.Description}</div>
-                        <div class="transaction-amount ${amountClass}">${formattedAmount}</div>
-                        <div class="transaction-category">
-                            <span class="category-badge" style="background-color: ${category.color}">
-                                ${category.icon} ${t.Category}
-                            </span>
-                        </div>
-                        <div>${t.Account}</div>
-                    </div>
-                `;
-            }).join('');
-            
-            // Add "Load More" button if there are more transactions
-            if (transactionsToShow.length > maxInitialRender) {
-                const loadMoreBtn = document.createElement('div');
-                loadMoreBtn.style.cssText = 'text-align: center; padding: 20px;';
-                loadMoreBtn.innerHTML = `
-                    <button onclick="loadMoreTransactions()" style="
-                        background: #667eea; 
-                        color: white; 
-                        border: none; 
-                        padding: 10px 20px; 
-                        border-radius: 6px; 
-                        cursor: pointer;
-                        font-weight: 500;
-                    ">
-                        Load More (${transactionsToShow.length - maxInitialRender} remaining)
-                    </button>
-                `;
-                list.appendChild(loadMoreBtn);
-            }
-        }
-
-        // Global variable to track loaded transactions
-        let currentTransactionsToShow = [];
-        let currentlyLoaded = 25;
-
-        function loadMoreTransactions() {
-            const nextBatch = 25;
-            const endIndex = Math.min(currentlyLoaded + nextBatch, currentTransactionsToShow.length);
-            
-            const list = document.getElementById('transactionsList');
-            const loadMoreBtn = list.querySelector('button');
-            if (loadMoreBtn) loadMoreBtn.parentElement.remove();
-            
-            for (let i = currentlyLoaded; i < endIndex; i++) {
-                const t = currentTransactionsToShow[i];
-                const category = categoryMappings.categories[t.Category] || categoryMappings.categories['Miscellaneous'];
-                const amountClass = t.Amount > 0 ? 'positive' : 'negative';
-                const formattedAmount = Math.abs(t.Amount).toLocaleString('en-US', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                });
-                
-                const transactionDiv = document.createElement('div');
-                transactionDiv.className = 'transaction-item';
-                transactionDiv.innerHTML = `
-                    <div class="transaction-date">${t.Date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}</div>
-                    <div class="transaction-description">${t.Description}</div>
-                    <div class="transaction-amount ${amountClass}">${formattedAmount}</div>
-                    <div class="transaction-category">
-                        <span class="category-badge" style="background-color: ${category.color}">
-                            ${category.icon} ${t.Category}
-                        </span>
-                    </div>
-                    <div>${t.Account}</div>
-                `;
-                list.appendChild(transactionDiv);
-            }
-            
-            currentlyLoaded = endIndex;
-            
-            if (endIndex < currentTransactionsToShow.length) {
-                const loadMoreBtn = document.createElement('div');
-                loadMoreBtn.style.cssText = 'text-align: center; padding: 20px;';
-                loadMoreBtn.innerHTML = `
-                    <button onclick="loadMoreTransactions()" style="
-                        background: #667eea; 
-                        color: white; 
-                        border: none; 
-                        padding: 10px 20px; 
-                        border-radius: 6px; 
-                        cursor: pointer;
-                        font-weight: 500;
-                    ">
-                        Load More (${currentTransactionsToShow.length - endIndex} remaining)
-                    </button>
-                `;
-                list.appendChild(loadMoreBtn);
-            }
-        }
-
-        function updateCategoryFilter() {
-            const categories = [...new Set(transactions.map(t => t.Category))].sort();
-            const filter = document.getElementById('categoryFilter');
-            
-            filter.innerHTML = '<option value="">All Categories</option>' +
-                categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-        }
-
-        // Optimized filtering with debouncing
-        let filterTimeout;
-        
-        function filterTransactions() {
-            // Clear previous timeout to debounce rapid typing
-            clearTimeout(filterTimeout);
-            
-            filterTimeout = setTimeout(() => {
-                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-                const selectedCategory = document.getElementById('categoryFilter').value;
-                
-                let filtered = transactions;
-                
-                if (searchTerm) {
-                    filtered = filtered.filter(t => 
-                        t.Description.toLowerCase().includes(searchTerm) ||
-                        t.Category.toLowerCase().includes(searchTerm)
-                    );
-                }
-                
-                if (selectedCategory) {
-                    filtered = filtered.filter(t => t.Category === selectedCategory);
-                }
-                
-                currentTransactionsToShow = filtered;
-                currentlyLoaded = 25; // Reset load counter
-                renderTransactions(filtered);
-            }, 300); // 300ms debounce
-        }
-
-        // Export functionality
-        function exportReport() {
-            const report = generateReport();
-            const blob = new Blob([report], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `finance-analysis-${new Date().toISOString().split('T')[0]}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function generateReport() {
-            const totalIncome = transactions.filter(t => t.Amount > 0).reduce((sum, t) => sum + t.Amount, 0);
-            const totalExpenses = Math.abs(transactions.filter(t => t.Amount < 0).reduce((sum, t) => sum + t.Amount, 0));
-            const balance = totalIncome - totalExpenses;
-            
-            return `PERSONAL FINANCE ANALYSIS REPORT
-Generated: ${new Date().toLocaleDateString()}
-
-SUMMARY
-=======
-Total Income: $${totalIncome.toLocaleString()}
-Total Expenses: $${totalExpenses.toLocaleString()}
-Net Balance: $${balance.toLocaleString()}
-Total Transactions: ${transactions.length}
-Savings Rate: ${((balance / totalIncome) * 100).toFixed(1)}%
-
-SPENDING BY CATEGORY
-==================
-${Object.entries(transactions.filter(t => t.Amount < 0).reduce((acc, t) => {
-    const cat = t.Category || 'Miscellaneous';
-    acc[cat] = (acc[cat] || 0) + Math.abs(t.Amount);
-    return acc;
-}, {})).sort(([,a], [,b]) => b - a).map(([cat, amount]) => 
-    `${cat}: $${amount.toLocaleString()}`
-).join('\n')}
-
-This report was generated by the Personal Finance Analyzer
-Built with Claude AI assistance
-`;
-        }
-
-        // Initialize - no external file loading needed
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCategoryMappings(); // Now uses embedded data
-        });
-    </script>
-</body>
-</html> + (value/1000).toFixed(0) + 'k';
-                                },
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: {
-                                    size: 11
+                                    return '$' + value.toLocaleString();
                                 }
                             }
                         }
@@ -1380,9 +872,9 @@ Built with Claude AI assistance
 `;
         }
 
-        // Initialize - no external file loading needed
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            loadCategoryMappings(); // Now uses embedded data
+            loadCategoryMappings();
         });
     </script>
 </body>
